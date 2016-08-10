@@ -24,6 +24,7 @@ Usage
             crawler_name='my scrapy crawler',
             team_name='my team',
             metadata={'extra': 'metadata'},  # optional
+            item_cls=MyCDRItem,  # optional
             )
 
 There is also ``scrapy_cdr.cdr_item`` for non-text items,

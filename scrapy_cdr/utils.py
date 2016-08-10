@@ -4,7 +4,7 @@ from datetime import datetime
 from .items import CDRItem
 
 
-def text_cdr_item(response, *, crawler_name, team_name, metadata=None):
+def text_cdr_item(response, *, crawler_name, team_name, metadata=None, item_cls=CDRItem):
     return cdr_item(
         response.url,
         metadata=metadata,
@@ -14,13 +14,14 @@ def text_cdr_item(response, *, crawler_name, team_name, metadata=None):
             .decode('ascii', 'ignore'),
         extracted_text=extract_text(response),
         raw_content=response.text,
+        item_cls=item_cls,
     )
 
 
-def cdr_item(url, *, crawler_name, team_name, metadata=None, **extra):
+def cdr_item(url, *, crawler_name, team_name, metadata=None, item_cls=CDRItem, **extra):
     metadata = metadata or {}
     timestamp = int(datetime.utcnow().timestamp() * 1000)
-    return CDRItem(
+    return item_cls(
         _id=hashlib.sha256('{}-{}'.format(url, timestamp).encode('utf-8'))
             .hexdigest().upper(),
         crawler=crawler_name,
