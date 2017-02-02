@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='scrapy-cdr',
-    version='0.1.1',
+    version='0.1.2',
     packages=['scrapy_cdr'],
     install_requires=[
         'scrapy',
