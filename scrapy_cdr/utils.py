@@ -5,13 +5,13 @@ from .items import CDRItem
 
 
 def text_cdr_item(response, *, crawler_name, team_name, metadata=None, item_cls=CDRItem):
+    content_type = response.headers.get('content-type', b'')
     return cdr_item(
         response.url,
         metadata=metadata,
         crawler_name=crawler_name,
         team_name=team_name,
-        content_type=response.headers['content-type']
-            .decode('ascii', 'ignore'),
+        content_type=content_type.decode('ascii', 'ignore'),
         extracted_text=extract_text(response),
         raw_content=response.text,
         item_cls=item_cls,
