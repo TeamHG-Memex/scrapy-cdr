@@ -4,6 +4,12 @@ Changes
 .. contents::
 
 
+0.2.0 (?)
+------------------
+
+- Updated to CDR v3 (breaking change)
+
+
 0.1.2 (2017-02-02)
 ------------------
 
