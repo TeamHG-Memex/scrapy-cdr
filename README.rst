@@ -1,7 +1,8 @@
 Scrapy CDR
 ==========
 
-Item definition and utils for storing items in CDR format for scrapy.
+Item definition and utils for storing items in CDR v3 format for scrapy.
+
 
 Install
 -------
@@ -23,12 +24,11 @@ Usage
             response,
             crawler_name='my scrapy crawler',
             team_name='my team',
-            metadata={'extra': 'metadata'},  # optional
             item_cls=MyCDRItem,  # optional
             )
 
 There is also ``scrapy_cdr.cdr_item`` for non-text items,
-and item definition in ``scrapy_cdr.CDRItem``.
+and an item definition in ``scrapy_cdr.CDRItem``.
 
 
 License
