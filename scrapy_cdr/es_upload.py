@@ -11,7 +11,7 @@ from .utils import format_timestamp
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    # logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description='Upload items to ES index')
     arg = parser.add_argument
     arg('input', help='input in .jl or .jl.gz format')
@@ -36,8 +36,6 @@ def main():
         **kwargs)
     print(client.info())
 
-    report_step = 100
-
     def items():
         with json_lines.open(args.input, broken=args.broken) as f:
             from itertools import islice
@@ -51,6 +49,7 @@ def main():
                 }
 
     t0 = time.time()
+    last_i = 0
     updated = created = 0
     for i, (success, result) in enumerate(
             elasticsearch.helpers.parallel_bulk(
@@ -67,10 +66,12 @@ def main():
             created += 1
         else:
             print('Unexpected result', result_op, result)
-        if i % report_step == 0:
+        t1 = time.time()
+        if t1 - t0 > 30:
             print('{:,} items processed ({:,} created, {:,} updated) '
                   'at {:.0f} items/s'
                   .format(i, created, updated,
-                          report_step / (time.time() - t0),
+                          (i - last_i) / (t1 - t0),
                   ))
-            t0 = time.time()
+            t0 = t1
+            last_i = i
