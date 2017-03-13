@@ -7,7 +7,13 @@ setup(
     packages=['scrapy_cdr'],
     install_requires=[
         'scrapy',
+        'json_lines',
     ],
+    entry_points={
+        'console_scripts': [
+            'cdr-v2-to-v3=scrapy_cdr.v2_to_v3:main',
+            ],
+    },
     license='MIT license',
     classifiers=[
         'Development Status :: 3 - Alpha',
