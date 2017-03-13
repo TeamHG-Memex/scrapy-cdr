@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-import logging
+from itertools import islice
 import time
 
 import json_lines
@@ -11,11 +11,15 @@ from .utils import format_timestamp
 
 
 def main():
-    # logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description='Upload items to ES index')
     arg = parser.add_argument
     arg('input', help='input in .jl or .jl.gz format')
     arg('index', help='ES index name')
+    arg('--type', default='document',
+        help='ES type to use ("document" by default)')
+    arg('--op-type', default='index',
+        choices={'index', 'create', 'delete', 'update'},
+        help='ES operation type to use ("document" by default)')
     arg('--broken', action='store_true',
         help='specify if input might be broken (incomplete)')
     arg('--host', default='localhost', help='ES host in host[:port] format')
@@ -23,6 +27,7 @@ def main():
     arg('--password', help='HTTP Basic Auth password')
     arg('--chunk-size', type=int, default=50, help='upload chunk size')
     arg('--threads', type=int, default=8, help='number of threads')
+    arg('--limit', type=int, help='Index first N items')
 
     args = parser.parse_args()
     kwargs = {}
@@ -36,42 +41,54 @@ def main():
         **kwargs)
     print(client.info())
 
-    def items():
+    def actions():
         with json_lines.open(args.input, broken=args.broken) as f:
-            from itertools import islice
-            for item in f:
+            items = islice(f, args.limit) if args.limit else f
+            for item in items:
                 item['timestamp_index'] = format_timestamp(datetime.utcnow())
-                yield {
+                action = {
+                    '_op_type': args.op_type,
                     '_index': args.index,
-                    '_type': 'document',
+                    '_type': args.type,
                     '_id': item.pop('_id'),
-                    '_source': item,
                 }
+                if args.op_type != 'delete':
+                    action['_source'] = item
+                yield action
 
-    t0 = time.time()
-    last_i = 0
-    updated = created = 0
+    t0 = t00 = time.time()
+    i = last_i = 0
+    result_counts = {'updated': 0, 'created': 0, 'deleted': 0, 'not_found': 0}
     for i, (success, result) in enumerate(
             elasticsearch.helpers.parallel_bulk(
                 client,
-                actions=items(),
+                actions=actions(),
                 chunk_size=args.chunk_size,
                 thread_count=args.threads,
+                raise_on_error=False,
             ), start=1):
-        assert success, (success, result)
-        result_op = result['index']['result']
-        if result_op == 'updated':
-            updated += 1
-        elif result_op == 'created':
-            created += 1
+
+        result_op = result[args.op_type]['result']
+        if args.op_type == 'delete':
+            if not success:
+                assert result_op == 'not_found', result
         else:
-            print('Unexpected result', result_op, result)
+            assert success, (success, result)
+        result_counts[result_op] += 1
         t1 = time.time()
-        if t1 - t0 > 30:
-            print('{:,} items processed ({:,} created, {:,} updated) '
-                  'at {:.0f} items/s'
-                  .format(i, created, updated,
-                          (i - last_i) / (t1 - t0),
-                  ))
+        if t1 - t0 > 10:
+            _report_stats(i, last_i, t1 - t0, result_counts)
             t0 = t1
             last_i = i
+    _report_stats(i, 0, time.time() - t00, result_counts)
+
+
+def _report_stats(items, prev_items, dt, result_counts):
+    print('{items:,} items processed ({stats}) at {speed:.0f} items/s'
+          .format(
+            items=items,
+            stats=', '.join(
+                '{}: {:,}'.format(k, v)
+                for k, v in sorted(result_counts.items()) if v != 0),
+            speed=(items - prev_items) / dt,
+    ))
