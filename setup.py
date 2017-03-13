@@ -8,10 +8,13 @@ setup(
     install_requires=[
         'scrapy',
         'json_lines',
+        'elasticsearch',
+        'requests',
     ],
     entry_points={
         'console_scripts': [
             'cdr-v2-to-v3=scrapy_cdr.v2_to_v3:main',
+            'cdr-es-upload=scrapy_cdr.es_upload:main',
             ],
     },
     license='MIT license',

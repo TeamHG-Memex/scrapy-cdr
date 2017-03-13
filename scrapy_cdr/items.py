@@ -25,10 +25,6 @@ class CDRItem(scrapy.Item):
     # Text label identifying the team responsible for the crawler (string)
     team = scrapy.Field()
 
-    # Timestamp of COLLECTION of data from the web (datetime)
-    # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats
-    timestamp = scrapy.Field()
-
     # Timestamp of COLLECTION of data from the web using ISO-8601 format in UTC,
     # e.g. 2017-02-15T20:30:59Z
     timestamp_crawl = scrapy.Field()
