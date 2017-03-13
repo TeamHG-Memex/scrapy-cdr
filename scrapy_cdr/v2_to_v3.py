@@ -40,3 +40,4 @@ def main():
                     content_type=v2_item['content_type'],
                 )
                 outf.write(json.dumps(dict(v3_item)))
+                outf.write('\n')
