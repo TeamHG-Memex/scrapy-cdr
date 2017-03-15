@@ -8,6 +8,10 @@ Changes
 ------------------
 
 - Updated to CDR v3 (breaking change)
+- Added ``cdr-v2-to-v3`` script for CDR v2 -> v3 conversion
+- Added ``cdr-es-upload`` script for Elasticsearch upload
+- Added ``scrapy_cdr.media_pipeline.CDRMediaPipeline`` to help with
+  media item downloading
 
 
 0.1.2 (2017-02-02)
