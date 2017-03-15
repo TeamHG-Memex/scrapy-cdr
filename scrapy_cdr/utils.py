@@ -1,10 +1,11 @@
 import hashlib
 from datetime import datetime
 
-from .items import CDRItem
+from .items import CDRItem, CDRMediaItem
 
 
-def text_cdr_item(response, *, crawler_name, team_name, item_cls=CDRItem):
+def text_cdr_item(response, *, crawler_name, team_name, objects=None,
+                  item_cls=CDRItem):
     content_type = response.headers.get('content-type', b'')
     return cdr_item(
         response.url,
@@ -13,6 +14,7 @@ def text_cdr_item(response, *, crawler_name, team_name, item_cls=CDRItem):
         content_type=content_type.decode('ascii', 'ignore'),
         raw_content=response.text,
         item_cls=item_cls,
+        objects=objects or [],
     )
 
 
@@ -26,6 +28,15 @@ def cdr_item(url, *, crawler_name, team_name, item_cls=CDRItem, **extra):
         url=url,
         version=3.0,
         **extra)
+
+
+def media_cdr_item(url, *, stored_url, content_type):
+    return CDRMediaItem(
+        obj_original_url=url,
+        obj_stored_url=stored_url,
+        content_type=content_type,
+        timestamp_crawl=format_timestamp(datetime.utcnow()),
+    )
 
 
 def format_timestamp(dt):

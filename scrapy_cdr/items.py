@@ -39,5 +39,25 @@ class CDRItem(scrapy.Item):
 
     def __repr__(self):
         fields = ['_id', 'url', 'timestamp_crawl']
-        return '<CDRItem: {}>'.format(', '.join(
-            '{}: {}'.format(f, repr(self[f])) for f in fields))
+        return '<CDRItem: {attrs}{objects}>'.format(
+            attrs=', '.join(
+                '{}: {}'.format(f, repr(self[f])) for f in fields),
+            objects=('' if not self['objects'] else
+                     ', {} objects'.format(len(self['objects']))),
+        )
+
+
+class CDRMediaItem(scrapy.Item):
+    # Full URL requested by the crawler
+    obj_original_url = scrapy.Field()
+
+    # Relative URL reference to a cached copy of a binary object.
+    # UPPERCASE hash SHA-256 of the object.
+    obj_stored_url = scrapy.Field()
+
+    # MIME type
+    content_type = scrapy.Field()
+
+    # Timestamp of COLLECTION of data from the web using ISO-8601 format in UTC,
+    # eg 2017-02-15T20:30:59Z
+    timestamp_crawl = scrapy.Field()

@@ -6,10 +6,11 @@ setup(
     version='0.2.0',
     packages=['scrapy_cdr'],
     install_requires=[
-        'scrapy',
-        'json_lines',
+        'botocore',
         'elasticsearch',
+        'json_lines',
         'requests',
+        'scrapy',
     ],
     entry_points={
         'console_scripts': [
