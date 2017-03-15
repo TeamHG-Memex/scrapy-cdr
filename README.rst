@@ -1,8 +1,9 @@
 Scrapy CDR
 ==========
 
-Item definition and utils for storing items in CDR v3 format for scrapy.
+Item definition, various utils and helpers for working with CDR v3 format for scrapy.
 
+.. contents::
 
 Install
 -------
@@ -33,6 +34,7 @@ Items
 There is also ``scrapy_cdr.cdr_item`` for non-text items,
 and an item definition in ``scrapy_cdr.CDRItem``.
 
+
 Media items
 +++++++++++
 
@@ -57,6 +59,24 @@ and puts them into "objects" field of the CDR item according to CDR v3 schema.
         team_name='team',
         objects=['http://example.com/1.png', 'http://example.com/1.png'],
     )
+
+
+Uploading to Elasticsearch
+++++++++++++++++++++++++++
+
+``cdr-es-upload`` script takes care of generating
+``timestamp_index`` field and can be used for uploading or deletion of
+CDR items. Please see ``cdr-es-upload --help`` for help on command line options.
+
+
+Converting from CDR v2 format
++++++++++++++++++++++++++++++
+
+Use ``cdr-v2-to-v3`` script::
+
+    cdr-v2-to-v3 items.v2.jl.gz items.v3.jl.gz --broken
+
+Note that this script does not support media items.
 
 
 License
