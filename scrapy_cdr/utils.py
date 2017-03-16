@@ -30,12 +30,12 @@ def cdr_item(url, *, crawler_name, team_name, item_cls=CDRItem, **extra):
         **extra)
 
 
-def media_cdr_item(url, *, stored_url, content_type):
+def media_cdr_item(url, *, stored_url, content_type, timestamp_crawl=None):
     return CDRMediaItem(
         obj_original_url=url,
         obj_stored_url=stored_url,
         content_type=content_type,
-        timestamp_crawl=format_timestamp(datetime.utcnow()),
+        timestamp_crawl=timestamp_crawl or format_timestamp(datetime.utcnow()),
     )
 
 

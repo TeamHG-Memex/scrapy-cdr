@@ -1,10 +1,11 @@
+from datetime import datetime
 import hashlib
 import logging
 import os.path
 
 from scrapy import Request
 from scrapy.pipelines.files import FilesPipeline, S3FilesStore
-from .utils import media_cdr_item
+from .utils import format_timestamp, media_cdr_item
 
 
 logging.getLogger('botocore').setLevel(logging.WARNING)
@@ -55,7 +56,11 @@ class CDRMediaPipeline(FilesPipeline):
                 path = 's3://{}/{}{}'.format(
                     self.store.bucket, self.store.prefix, path)
             item['objects'].append(media_cdr_item(
-                res['url'], stored_url=path, content_type=res['content_type']))
+                res['url'],
+                stored_url=path,
+                content_type=res['content_type'],
+                timestamp_crawl=res['timestamp_crawl'],
+            ))
         return item
 
     def file_path(self, request, response=None, info=None):
@@ -69,4 +74,5 @@ class CDRMediaPipeline(FilesPipeline):
         result.pop('checksum', None)
         result['content_type'] = response.headers.get(b'content-type', b'') \
             .decode('ascii', 'ignore')
+        result['timestamp_crawl'] = format_timestamp(datetime.utcnow())
         return result
