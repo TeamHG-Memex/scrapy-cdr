@@ -53,6 +53,7 @@ def main():
                     '_type': args.type,
                     '_id': item.pop('_id'),
                 }
+                item.pop('metadata', None)  # not in CDRv3 schema
                 if args.op_type != 'delete':
                     action['_source'] = item
                 yield action

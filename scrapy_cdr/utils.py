@@ -4,8 +4,8 @@ from datetime import datetime
 from .items import CDRItem, CDRMediaItem
 
 
-def text_cdr_item(response, *, crawler_name, team_name, objects=None,
-                  item_cls=CDRItem):
+def text_cdr_item(response, *, crawler_name, team_name,
+                  objects=None, metadata=None, item_cls=CDRItem):
     content_type = response.headers.get('content-type', b'')
     return cdr_item(
         response.url,
@@ -15,6 +15,7 @@ def text_cdr_item(response, *, crawler_name, team_name, objects=None,
         raw_content=response.text,
         item_cls=item_cls,
         objects=objects or [],
+        metadata=metadata or {},
     )
 
 

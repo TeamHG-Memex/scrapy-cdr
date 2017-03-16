@@ -37,6 +37,9 @@ class CDRItem(scrapy.Item):
     # Schema version. This document describes schema version 2.0. (float)
     version = scrapy.Field()
 
+    # This field is not in CDR v3 schema, and will be stripped in cdr-es-upload
+    metadata = scrapy.Field()
+
     def __repr__(self):
         fields = ['_id', 'url', 'timestamp_crawl']
         return '<CDRItem: {attrs}{objects}>'.format(
