@@ -1,4 +1,5 @@
 import argparse
+from collections import defaultdict
 from datetime import datetime
 from itertools import islice
 import time
@@ -58,7 +59,7 @@ def main():
 
     t0 = t00 = time.time()
     i = last_i = 0
-    result_counts = {'updated': 0, 'created': 0, 'deleted': 0, 'not_found': 0}
+    result_counts = defaultdict(int)
     for i, (success, result) in enumerate(
             elasticsearch.helpers.parallel_bulk(
                 client,
@@ -67,14 +68,16 @@ def main():
                 thread_count=args.threads,
                 raise_on_error=False,
             ), start=1):
-
-        result_op = result[args.op_type]['result']
+        op_result = result[args.op_type].get('result')
+        if op_result is None:
+            # ES 2.x
+            op_result = 'status_{}'.format(result[args.op_type].get('status'))
         if args.op_type == 'delete':
             if not success:
-                assert result_op == 'not_found', result
+                assert op_result in {'not_found', 'status_404'}, result
         else:
-            assert success, (success, result)
-        result_counts[result_op] += 1
+            assert success, (success, op_result)
+        result_counts[op_result] += 1
         t1 = time.time()
         if t1 - t0 > 10:
             _report_stats(i, last_i, t1 - t0, result_counts)
