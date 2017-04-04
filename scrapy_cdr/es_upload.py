@@ -2,7 +2,9 @@ import argparse
 from collections import defaultdict
 from datetime import datetime
 from itertools import islice
+import sys
 import time
+import traceback
 
 import json_lines
 import elasticsearch
@@ -42,7 +44,7 @@ def main():
         **kwargs)
     print(client.info())
 
-    def actions():
+    def _actions():
         with json_lines.open(args.input, broken=args.broken) as f:
             items = islice(f, args.limit) if args.limit else f
             for item in items:
@@ -57,6 +59,19 @@ def main():
                 if args.op_type != 'delete':
                     action['_source'] = item
                 yield action
+
+    # This wrapper is needed due to use of raise_on_error=False
+    # below (which we need because es can raise exceptions on timeouts, etc.),
+    # but we don't want to ignore errors when reading data.
+    failed = [False]  # to set correct exit code
+    def actions():
+        try:
+            for x in _actions():
+                yield x
+        except Exception:
+            traceback.print_exc()
+            failed[0] = True
+            raise  # will be caught anyway
 
     t0 = t00 = time.time()
     i = last_i = 0
@@ -85,6 +100,9 @@ def main():
             t0 = t1
             last_i = i
     _report_stats(i, 0, time.time() - t00, result_counts)
+
+    if failed[0]:
+        sys.exit(1)
 
 
 def _report_stats(items, prev_items, dt, result_counts):
