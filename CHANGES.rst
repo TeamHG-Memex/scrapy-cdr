@@ -3,6 +3,11 @@ Changes
 
 .. contents::
 
+0.2.1 (2017-04-05)
+------------------
+
+- ``cdr-es-upload``: log exceptions when reading data to upload
+
 
 0.2.0 (2017-03-17)
 ------------------
