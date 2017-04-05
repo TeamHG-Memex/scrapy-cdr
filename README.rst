@@ -1,6 +1,18 @@
 Scrapy CDR
 ==========
 
+.. image:: https://img.shields.io/pypi/v/scrapy-cdr.svg
+   :target: https://pypi.python.org/pypi/scrapy-cdr
+   :alt: PyPI Version
+
+.. image:: https://travis-ci.org/TeamHG-Memex/scrapy-cdr.svg?branch=master
+   :target: http://travis-ci.org/TeamHG-Memex/scrapy-cdr
+   :alt: Build Status
+
+.. image:: http://codecov.io/github/TeamHG-Memex/scrapy-cdr/coverage.svg?branch=master
+   :target: http://codecov.io/github/TeamHG-Memex/scrapy-cdr?branch=master
+   :alt: Code Coverage
+
 Item definition, various utils and helpers for working with CDR v3 format for scrapy.
 
 .. contents::
