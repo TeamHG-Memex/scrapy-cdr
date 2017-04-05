@@ -11,8 +11,9 @@ setup(
         'elasticsearch-dsl',
         'json_lines',
         'requests',
-        'tqdm',
         'scrapy',
+        'six',
+        'tqdm',
     ],
     entry_points={
         'console_scripts': [
