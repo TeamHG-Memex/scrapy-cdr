@@ -18,8 +18,7 @@ def text_cdr_item(response, crawler_name, team_name,
         raw_content=response.text,
         item_cls=item_cls,
         objects=objects or [],
-        **extra,
-    )
+        **extra)
 
 
 def cdr_item(url, crawler_name, team_name, item_cls=CDRItem, **extra):
