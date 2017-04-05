@@ -22,7 +22,7 @@ class CDRMediaPipeline(FilesPipeline):
     2. Add the pipeline to ITEM_PIPELINES in settings::
 
         ITEM_PIPELINES = {
-            'undercrawler.media_pipeline.UndercrawlerMediaPipeline': 1,
+            'scrapy_cdr.media_pipeline.CDRMediaPipeline': 1,
         }
 
     3. Set ``FILES_STORE`` as you would do for scrapy FilesPipeline.
