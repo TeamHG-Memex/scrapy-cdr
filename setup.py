@@ -8,14 +8,17 @@ setup(
     install_requires=[
         'botocore',
         'elasticsearch',
+        'elasticsearch-dsl',
         'json_lines',
         'requests',
+        'tqdm',
         'scrapy',
     ],
     entry_points={
         'console_scripts': [
             'cdr-v2-to-v3=scrapy_cdr.v2_to_v3:main',
             'cdr-es-upload=scrapy_cdr.es_upload:main',
+            'cdr-es-download=scrapy_cdr.es_download:main',
             ],
     },
     license='MIT license',

@@ -3,6 +3,12 @@ Changes
 
 .. contents::
 
+0.3.0 (?)
+------------------
+
+- Add ``cdr-es-download`` script to download data from CDR
+
+
 0.2.1 (2017-04-05)
 ------------------
 
