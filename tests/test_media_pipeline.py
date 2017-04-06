@@ -1,6 +1,4 @@
 from __future__ import absolute_import
-import os
-import tempfile
 
 import scrapy
 from scrapy.crawler import CrawlerRunner
@@ -73,9 +71,8 @@ class WithFile(Resource):
 
 
 @inlineCallbacks
-def test_media_pipeline():
-    tempdir = tempfile.TemporaryDirectory()
-    crawler = make_crawler(FILES_STORE='file://' + tempdir.name)
+def test_media_pipeline(tmpdir):
+    crawler = make_crawler(FILES_STORE='file://{}'.format(tmpdir))
     with MockServer(WithFile) as s:
         root_url = s.root_url
         yield crawler.crawl(url=root_url)
@@ -85,14 +82,12 @@ def test_media_pipeline():
     assert len(root_item['objects']) == 2
     file_item = find_item('/file.pdf', root_item['objects'], 'obj_original_url')
     assert file_item['obj_original_url'] == root_url + '/file.pdf'
-    with open(os.path.join(tempdir.name, file_item['obj_stored_url']),
-              'rb') as f:
+    with tmpdir.join(file_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS
     assert file_item['content_type'] == 'application/pdf'
     forbidden_item = find_item(
         '/forbidden.pdf', root_item['objects'], 'obj_original_url')
-    with open(os.path.join(tempdir.name, forbidden_item['obj_stored_url']),
-              'rb') as f:
+    with tmpdir.join(forbidden_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS * 2
     page_item = find_item('/page?a=1&b=2', spider.collected_items)
     assert file_item == find_item(
