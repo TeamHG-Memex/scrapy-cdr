@@ -58,7 +58,7 @@ class PDFFile(Resource):
 
 class WithFile(Resource):
     def __init__(self):
-        super(WithFile, self).__init__()
+        Resource.__init__(self)
         self.putChild(b'', text_resource(
             '<a href="/file.pdf">file</a> '
             '<a href="/page?b=2&a=1">page</a> '
