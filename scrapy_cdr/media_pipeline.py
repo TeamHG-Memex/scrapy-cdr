@@ -70,7 +70,8 @@ class CDRMediaPipeline(FilesPipeline):
         return '{}{}'.format(name, media_ext)
 
     def media_downloaded(self, response, request, info):
-        result = super().media_downloaded(response, request, info)
+        result = super(CDRMediaPipeline, self)\
+            .media_downloaded(response, request, info)
         result.pop('checksum', None)
         result['content_type'] = response.headers.get(b'content-type', b'') \
             .decode('ascii', 'ignore')
