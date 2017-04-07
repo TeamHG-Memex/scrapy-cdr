@@ -34,12 +34,15 @@ class CDRMediaPipeline(FilesPipeline):
             objects=['http://example.com/1.png', 'http://example.com/1.png'],
         )
 
-    4. Optionally, subclass and re-define:
+    4. Optionally, subclass the ``CDRMediaPipeline`` and re-define some methods:
 
        - ``media_request`` method if you want to
          customize how media items are downloaded.
-       - ``s3_path`` method if you want to customize S3 URL of stored items.
-         By default it generates https:// url for public items and s3:// for private.
+       - ``s3_path`` method if you are storing media items in S3
+         (``FILES_STORE`` is "s3://...") and want to customize the S3 URL of
+         stored items. By default it is "https://" urls for public items
+         (if ``FILES_STORE_S3_ACL`` is ``public-read`` or ``public-read-write``),
+         and "s3://" for private items (default in scrapy).
     """
 
     def media_request(self, url):
