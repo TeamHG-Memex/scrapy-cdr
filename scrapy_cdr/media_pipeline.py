@@ -17,16 +17,14 @@ class CDRMediaPipeline(FilesPipeline):
 
     Usage:
 
-    1. Optionally, subclass and re-defined media_request method if you want to
-       customize how media items are downloaded.
-    2. Add the pipeline to ITEM_PIPELINES in settings::
+    1. Add the pipeline to ITEM_PIPELINES in settings::
 
         ITEM_PIPELINES = {
             'scrapy_cdr.media_pipeline.CDRMediaPipeline': 1,
         }
 
-    3. Set ``FILES_STORE`` as you would do for scrapy FilesPipeline.
-    4. Put urls to download into "objects" field of the cdr item in the crawler,
+    2. Set ``FILES_STORE`` as you would do for scrapy FilesPipeline.
+    3. Put urls to download into "objects" field of the cdr item in the crawler,
        for example::
 
         yield scrapy_cdr.utils.text_cdr_item(
@@ -35,6 +33,16 @@ class CDRMediaPipeline(FilesPipeline):
             team_name='team',
             objects=['http://example.com/1.png', 'http://example.com/1.png'],
         )
+
+    4. Optionally, subclass the ``CDRMediaPipeline`` and re-define some methods:
+
+       - ``media_request`` method if you want to
+         customize how media items are downloaded.
+       - ``s3_path`` method if you are storing media items in S3
+         (``FILES_STORE`` is "s3://...") and want to customize the S3 URL of
+         stored items. By default it is "https://" urls for public items
+         (if ``FILES_STORE_S3_ACL`` is ``public-read`` or ``public-read-write``),
+         and "s3://" for private items (default in scrapy).
     """
 
     def media_request(self, url):
@@ -53,8 +61,7 @@ class CDRMediaPipeline(FilesPipeline):
         for res in (x for ok, x in results if ok):
             path = res['path']
             if isinstance(self.store, S3FilesStore):
-                path = 's3://{}/{}{}'.format(
-                    self.store.bucket, self.store.prefix, path)
+                path = self.s3_path(path)
             item['objects'].append(media_cdr_item(
                 res['url'],
                 stored_url=path,
@@ -62,6 +69,14 @@ class CDRMediaPipeline(FilesPipeline):
                 timestamp_crawl=res['timestamp_crawl'],
             ))
         return item
+
+    def s3_path(self, path):
+        if self.store.POLICY in {'public-read', 'public-read-write'}:
+            return 'https://{}.s3.amazonaws.com/{}{}'.format(
+                self.store.bucket, self.store.prefix, path)
+        else:
+            return 's3://{}/{}{}'.format(
+                self.store.bucket, self.store.prefix, path)
 
     def file_path(self, request, response=None, info=None):
         assert response is not None
