@@ -53,16 +53,14 @@ Media items
 ``scrapy_cdr.media_pipeline.CDRMediaPipeline`` helps to download items
 and puts them into "objects" field of the CDR item according to CDR v3 schema.
 
-1. Optionally, subclass and re-defined ``media_request``
-   method if you want to customize how media items are downloaded.
-2. Add the pipeline to ``ITEM_PIPELINES`` in settings::
+1. Add the pipeline to ITEM_PIPELINES in settings::
 
     ITEM_PIPELINES = {
         'scrapy_cdr.media_pipeline.CDRMediaPipeline': 1,
     }
 
-3. Set ``FILES_STORE`` as you would do for scrapy FilesPipeline.
-4. Put urls to download into "objects" field of the cdr item in the crawler,
+2. Set ``FILES_STORE`` as you would do for scrapy FilesPipeline.
+3. Put urls to download into "objects" field of the cdr item in the crawler,
    for example::
 
     yield scrapy_cdr.utils.text_cdr_item(
@@ -71,6 +69,13 @@ and puts them into "objects" field of the CDR item according to CDR v3 schema.
         team_name='team',
         objects=['http://example.com/1.png', 'http://example.com/1.png'],
     )
+
+4. Optionally, subclass and re-define:
+
+   - ``media_request`` method if you want to
+     customize how media items are downloaded.
+   - ``s3_path`` method if you want to customize S3 URL of stored items.
+     By default it generates https:// url for public items and s3:// for private.
 
 
 Uploading to Elasticsearch
