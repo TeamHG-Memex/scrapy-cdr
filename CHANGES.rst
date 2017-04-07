@@ -3,10 +3,11 @@ Changes
 
 .. contents::
 
-0.3.0 (?)
+0.3.0 (2017-04-07)
 ------------------
 
 - Add ``cdr-es-download`` script to download data from CDR
+- ``CDRMediaPipeline``: use "https://" URL for public media items on S3
 
 
 0.2.1 (2017-04-05)
