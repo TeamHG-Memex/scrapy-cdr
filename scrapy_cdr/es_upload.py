@@ -31,6 +31,7 @@ def main():
     arg('--chunk-size', type=int, default=50, help='upload chunk size')
     arg('--threads', type=int, default=8, help='number of threads')
     arg('--limit', type=int, help='Index first N items')
+    arg('--format', choices=['CDRv2', 'CDRv3'], default='CDRv3')
 
     args = parser.parse_args()
     kwargs = {}
@@ -44,18 +45,22 @@ def main():
         **kwargs)
     print(client.info())
 
+    is_cdrv3 = args.format == 'CDRv3'
+
     def _actions():
         with json_lines.open(args.input, broken=args.broken) as f:
             items = islice(f, args.limit) if args.limit else f
             for item in items:
-                item['timestamp_index'] = format_timestamp(datetime.utcnow())
+                if is_cdrv3:
+                    item['timestamp_index'] = format_timestamp(datetime.utcnow())
                 action = {
                     '_op_type': args.op_type,
                     '_index': args.index,
                     '_type': args.type,
                     '_id': item.pop('_id'),
                 }
-                item.pop('metadata', None)  # not in CDRv3 schema
+                if is_cdrv3:
+                    item.pop('metadata', None)  # not in CDRv3 schema
                 if args.op_type != 'delete':
                     action['_source'] = item
                 yield action
