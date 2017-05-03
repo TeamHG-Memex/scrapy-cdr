@@ -31,6 +31,7 @@ def main():
     arg('--chunk-size', type=int, default=50, help='upload chunk size')
     arg('--threads', type=int, default=8, help='number of threads')
     arg('--limit', type=int, help='Index first N items')
+    arg('--format', choices=['CDRv2', 'CDRv3'], default='CDRv3')
 
     args = parser.parse_args()
     kwargs = {}
@@ -44,18 +45,34 @@ def main():
         **kwargs)
     print(client.info())
 
+    is_cdrv3 = args.format == 'CDRv3'
+
     def _actions():
         with json_lines.open(args.input, broken=args.broken) as f:
             items = islice(f, args.limit) if args.limit else f
             for item in items:
-                item['timestamp_index'] = format_timestamp(datetime.utcnow())
+
+                if is_cdrv3:
+                    assert 'timestamp_crawl' in item, 'this is not CDRv3, check --format'
+                else:
+                    assert 'timestamp' in item, 'this is not CDRv2, check --format'
+
+                if is_cdrv3:
+                    item['timestamp_index'] = format_timestamp(datetime.utcnow())
+                elif isinstance(item['timestamp'], int):
+                    item['timestamp'] = format_timestamp(
+                        datetime.fromtimestamp(item['timestamp'] / 1000.))
+
                 action = {
                     '_op_type': args.op_type,
                     '_index': args.index,
                     '_type': args.type,
                     '_id': item.pop('_id'),
                 }
-                item.pop('metadata', None)  # not in CDRv3 schema
+                if is_cdrv3:
+                    item.pop('metadata', None)  # not in CDRv3 schema
+                else:
+                    item.pop('extracted_metadata', None)
                 if args.op_type != 'delete':
                     action['_source'] = item
                 yield action
@@ -76,30 +93,32 @@ def main():
     t0 = t00 = time.time()
     i = last_i = 0
     result_counts = defaultdict(int)
-    for i, (success, result) in enumerate(
-            elasticsearch.helpers.parallel_bulk(
-                client,
-                actions=actions(),
-                chunk_size=args.chunk_size,
-                thread_count=args.threads,
-                raise_on_error=False,
-            ), start=1):
-        op_result = result[args.op_type].get('result')
-        if op_result is None:
-            # ES 2.x
-            op_result = 'status_{}'.format(result[args.op_type].get('status'))
-        if args.op_type == 'delete':
-            if not success:
-                assert op_result in {'not_found', 'status_404'}, result
-        else:
-            assert success, (success, op_result)
-        result_counts[op_result] += 1
-        t1 = time.time()
-        if t1 - t0 > 10:
-            _report_stats(i, last_i, t1 - t0, result_counts)
-            t0 = t1
-            last_i = i
-    _report_stats(i, 0, time.time() - t00, result_counts)
+    try:
+        for i, (success, result) in enumerate(
+                elasticsearch.helpers.parallel_bulk(
+                    client,
+                    actions=actions(),
+                    chunk_size=args.chunk_size,
+                    thread_count=args.threads,
+                    raise_on_error=False,
+                ), start=1):
+            op_result = result[args.op_type].get('result')
+            if op_result is None:
+                # ES 2.x
+                op_result = 'status_{}'.format(result[args.op_type].get('status'))
+            result_counts[op_result] += 1
+            if args.op_type == 'delete':
+                if not success:
+                    assert op_result in {'not_found', 'status_404'}, result
+            else:
+                assert success, (success, op_result, result)
+            t1 = time.time()
+            if t1 - t0 > 10:
+                _report_stats(i, last_i, t1 - t0, result_counts)
+                t0 = t1
+                last_i = i
+    finally:
+        _report_stats(i, 0, time.time() - t00, result_counts)
 
     if failed[0]:
         sys.exit(1)

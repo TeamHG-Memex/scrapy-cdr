@@ -13,7 +13,9 @@ Scrapy CDR
    :target: http://codecov.io/github/TeamHG-Memex/scrapy-cdr?branch=master
    :alt: Code Coverage
 
-Item definition, various utils and helpers for working with CDR v3 format for scrapy.
+Item definition, various utils and helpers for working with CDR format for scrapy.
+Main supported format is CDR v3, but there is CDR v2 support for uploading to ES
+and a v2 -> v3 converter.
 
 .. contents::
 
