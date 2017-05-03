@@ -53,6 +53,10 @@ def main():
             for item in items:
                 if is_cdrv3:
                     item['timestamp_index'] = format_timestamp(datetime.utcnow())
+                if is_cdrv3:
+                    assert 'timestamp_crawl' in item, 'this is not CDRv3, check --format'
+                else:
+                    assert 'timestamp' in item, 'this is not CDRv2, check --format'
                 action = {
                     '_op_type': args.op_type,
                     '_index': args.index,
