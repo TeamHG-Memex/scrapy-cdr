@@ -51,12 +51,18 @@ def main():
         with json_lines.open(args.input, broken=args.broken) as f:
             items = islice(f, args.limit) if args.limit else f
             for item in items:
-                if is_cdrv3:
-                    item['timestamp_index'] = format_timestamp(datetime.utcnow())
+
                 if is_cdrv3:
                     assert 'timestamp_crawl' in item, 'this is not CDRv3, check --format'
                 else:
                     assert 'timestamp' in item, 'this is not CDRv2, check --format'
+
+                if is_cdrv3:
+                    item['timestamp_index'] = format_timestamp(datetime.utcnow())
+                elif isinstance(item['timestamp'], int):
+                    item['timestamp'] = format_timestamp(
+                        datetime.fromtimestamp(item['timestamp'] / 1000.))
+
                 action = {
                     '_op_type': args.op_type,
                     '_index': args.index,
@@ -65,6 +71,8 @@ def main():
                 }
                 if is_cdrv3:
                     item.pop('metadata', None)  # not in CDRv3 schema
+                else:
+                    item.pop('extracted_metadata', None)
                 if args.op_type != 'delete':
                     action['_source'] = item
                 yield action
@@ -103,7 +111,7 @@ def main():
                 if not success:
                     assert op_result in {'not_found', 'status_404'}, result
             else:
-                assert success, (success, op_result)
+                assert success, (success, op_result, result)
             t1 = time.time()
             if t1 - t0 > 10:
                 _report_stats(i, last_i, t1 - t0, result_counts)
