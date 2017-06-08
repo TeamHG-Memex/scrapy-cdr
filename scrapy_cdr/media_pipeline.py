@@ -65,7 +65,7 @@ class CDRMediaPipeline(FilesPipeline):
             item['objects'].append(media_cdr_item(
                 res['url'],
                 stored_url=path,
-                content_type=res['content_type'],
+                headers=res['headers'],
                 timestamp_crawl=res['timestamp_crawl'],
             ))
         return item
@@ -88,7 +88,6 @@ class CDRMediaPipeline(FilesPipeline):
         result = super(CDRMediaPipeline, self)\
             .media_downloaded(response, request, info)
         result.pop('checksum', None)
-        result['content_type'] = response.headers.get(b'content-type', b'') \
-            .decode('ascii', 'ignore')
+        result['headers'] = response.headers
         result['timestamp_crawl'] = format_timestamp(datetime.utcnow())
         return result

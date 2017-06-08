@@ -16,6 +16,7 @@ def text_cdr_item(response, crawler_name, team_name,
         team_name=team_name,
         content_type=content_type.decode('ascii', 'ignore'),
         raw_content=response.text,
+        response_headers=response.headers.to_unicode_dict(),
         item_cls=item_cls,
         objects=objects or [],
         **extra)
@@ -33,13 +34,18 @@ def cdr_item(url, crawler_name, team_name, item_cls=CDRItem, **extra):
         **extra)
 
 
-def media_cdr_item(url, stored_url, content_type, timestamp_crawl=None):
+def media_cdr_item(url, stored_url, headers, timestamp_crawl=None):
     return CDRMediaItem(
         obj_original_url=url,
         obj_stored_url=stored_url,
-        content_type=content_type,
+        content_type=get_content_type(headers),
+        response_headers=headers.to_unicode_dict(),
         timestamp_crawl=timestamp_crawl or format_timestamp(datetime.utcnow()),
     )
+
+
+def get_content_type(headers):
+    return headers.get('content-type', b'').decode('ascii', 'ignore')
 
 
 def format_timestamp(dt):

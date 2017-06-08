@@ -53,6 +53,7 @@ class PDFFile(Resource):
 
     def render_GET(self, request):
         request.setHeader(b'content-type', b'application/pdf')
+        request.setHeader(b'content-hype', b'very/high')
         return FILE_CONTENTS
 
 
@@ -85,6 +86,11 @@ def test_media_pipeline(tmpdir):
     with tmpdir.join(file_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS
     assert file_item['content_type'] == 'application/pdf'
+    headers = dict(file_item['response_headers'])
+    headers.pop('date')
+    headers.pop('server')
+    assert headers == {'content-type': 'application/pdf',
+                       'content-hype': 'very/high'}
     forbidden_item = find_item(
         '/forbidden.pdf', root_item['objects'], 'obj_original_url')
     with tmpdir.join(forbidden_item['obj_stored_url']).open('rb') as f:

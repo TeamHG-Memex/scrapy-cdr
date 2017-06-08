@@ -14,7 +14,7 @@ Scrapy CDR
    :alt: Code Coverage
 
 Item definition, various utils and helpers for working with CDR format for scrapy.
-Main supported format is CDR v3, but there is CDR v2 support for uploading to ES
+Main supported format is CDR v3.1, but there is CDR v2 support for uploading to ES
 and a v2 -> v3 converter. If you need CDR v2 support, use ``scrapy-cdr==0.1.2``.
 
 .. contents::

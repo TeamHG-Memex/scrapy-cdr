@@ -22,6 +22,9 @@ class CDRItem(scrapy.Item):
     # Original source text/html (string)
     raw_content = scrapy.Field()
 
+    # Response headers as a dictionary
+    response_headers = scrapy.Field()
+
     # Text label identifying the team responsible for the crawler (string)
     team = scrapy.Field()
 
@@ -60,6 +63,9 @@ class CDRMediaItem(scrapy.Item):
 
     # MIME type
     content_type = scrapy.Field()
+
+    # Response headers as a dictionary
+    response_headers = scrapy.Field()
 
     # Timestamp of COLLECTION of data from the web using ISO-8601 format in UTC,
     # eg 2017-02-15T20:30:59Z
