@@ -19,7 +19,7 @@ class Spider(scrapy.Spider):
         self.start_urls = [url]
         self.le = LinkExtractor()
         self.files_le = LinkExtractor(
-            tags=['a'], attrs=['href'], deny_extensions=[])
+            tags=['a'], attrs=['href'], deny_extensions=[], canonicalize=False)
 
     def parse(self, response):
         follow_urls = [link.url for link in self.le.extract_links(response)]
@@ -95,6 +95,6 @@ def test_media_pipeline(tmpdir):
         '/forbidden.pdf', root_item['objects'], 'obj_original_url')
     with tmpdir.join(forbidden_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS * 2
-    page_item = find_item('/page?a=1&b=2', spider.collected_items)
+    page_item = find_item('/page?b=2&a=1', spider.collected_items)
     assert file_item == find_item(
         '/file.pdf', page_item['objects'], 'obj_original_url')
