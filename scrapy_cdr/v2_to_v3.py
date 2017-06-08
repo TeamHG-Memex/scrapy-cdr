@@ -38,6 +38,7 @@ def main():
                     url=v2_item['url'],
                     raw_content=v2_item['raw_content'],
                     content_type=v2_item['content_type'],
+                    response_headers={'content-type': v2_item['content_type']},
                 )
                 outf.write(json.dumps(dict(v3_item)))
                 outf.write('\n')

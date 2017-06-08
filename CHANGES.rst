@@ -3,6 +3,12 @@ Changes
 
 .. contents::
 
+0.3.1 (TBA)
+------------------
+
+- Support CDR v3.1 format (add ``response_headers``)
+
+
 0.3.0 (2017-04-07)
 ------------------
 

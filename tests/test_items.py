@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from scrapy.http.headers import Headers
 from scrapy.http.response.text import TextResponse
 
 from scrapy_cdr.utils import text_cdr_item, media_cdr_item
@@ -8,7 +9,8 @@ from scrapy_cdr.utils import text_cdr_item, media_cdr_item
 def test_text_cdr_item():
     response = TextResponse(
         url='http://example.com',
-        headers={'Content-Type': 'text/plain'},
+        headers={'Content-Type': 'text/plain',
+                 'another-header': 'text/complain, text/explain'},
         body=b'a body',
         encoding='utf8')
     item = text_cdr_item(response, crawler_name='crawler', team_name='team')
@@ -21,6 +23,8 @@ def test_text_cdr_item():
         'crawler': 'crawler',
         'objects': [],
         'raw_content': 'a body',
+        'response_headers': {'content-type': 'text/plain',
+                             'another-header': 'text/complain, text/explain'},
         'team': 'team',
         'url': 'http://example.com',
         'version': 3.0}
@@ -35,11 +39,14 @@ def test_media_cdr_item():
     item = dict(media_cdr_item(
         url='http://example.com/1.png',
         stored_url='1.png',
-        content_type='image/png',
+        headers=Headers({'Content-Type': 'image/png',
+                         'another-header': 'another_value'}),
     ))
     check_timestamp_crawl(item)
     assert item == {
         'obj_original_url': 'http://example.com/1.png',
         'obj_stored_url': '1.png',
         'content_type': 'image/png',
+        'response_headers': {'content-type': 'image/png',
+                             'another-header': 'another_value'},
     }

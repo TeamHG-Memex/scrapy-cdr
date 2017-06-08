@@ -19,7 +19,7 @@ class Spider(scrapy.Spider):
         self.start_urls = [url]
         self.le = LinkExtractor()
         self.files_le = LinkExtractor(
-            tags=['a'], attrs=['href'], deny_extensions=[])
+            tags=['a'], attrs=['href'], deny_extensions=[], canonicalize=False)
 
     def parse(self, response):
         follow_urls = [link.url for link in self.le.extract_links(response)]
@@ -53,6 +53,7 @@ class PDFFile(Resource):
 
     def render_GET(self, request):
         request.setHeader(b'content-type', b'application/pdf')
+        request.setHeader(b'content-hype', b'very/high')
         return FILE_CONTENTS
 
 
@@ -85,10 +86,15 @@ def test_media_pipeline(tmpdir):
     with tmpdir.join(file_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS
     assert file_item['content_type'] == 'application/pdf'
+    headers = dict(file_item['response_headers'])
+    headers.pop('date')
+    headers.pop('server')
+    assert headers == {'content-type': 'application/pdf',
+                       'content-hype': 'very/high'}
     forbidden_item = find_item(
         '/forbidden.pdf', root_item['objects'], 'obj_original_url')
     with tmpdir.join(forbidden_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS * 2
-    page_item = find_item('/page?a=1&b=2', spider.collected_items)
+    page_item = find_item('/page?b=2&a=1', spider.collected_items)
     assert file_item == find_item(
         '/file.pdf', page_item['objects'], 'obj_original_url')
