@@ -2,6 +2,7 @@ from datetime import datetime
 import hashlib
 import logging
 import os.path
+from six.moves.urllib.parse import urlsplit
 
 from scrapy import Request
 from scrapy.pipelines.files import FilesPipeline, S3FilesStore
@@ -81,7 +82,8 @@ class CDRMediaPipeline(FilesPipeline):
     def file_path(self, request, response=None, info=None):
         assert response is not None
         name = hashlib.sha256(response.body).hexdigest().upper()
-        media_ext = os.path.splitext(request.url)[1]
+        parsed = urlsplit(request.url)
+        media_ext = os.path.splitext(parsed.path)[1]
         return '{}{}'.format(name, media_ext)
 
     def media_downloaded(self, response, request, info):

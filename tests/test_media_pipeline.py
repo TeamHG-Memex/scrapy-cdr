@@ -68,7 +68,7 @@ class WithFile(Resource):
         self.putChild(b'file.pdf', PDFFile())
         self.putChild(b'forbidden.pdf', text_resource(FILE_CONTENTS * 2)())
         self.putChild(b'page', text_resource(
-            '<a href="/file.pdf">file</a>')())
+            '<a href="/file.pdf?allow=true">file</a>')())
 
 
 @inlineCallbacks
@@ -96,5 +96,6 @@ def test_media_pipeline(tmpdir):
     with tmpdir.join(forbidden_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS * 2
     page_item = find_item('/page?b=2&a=1', spider.collected_items)
-    assert file_item == find_item(
-        '/file.pdf', page_item['objects'], 'obj_original_url')
+    file_item_q = find_item(
+        '/file.pdf?allow=true', page_item['objects'], 'obj_original_url')
+    assert file_item_q['obj_stored_url'] == file_item['obj_stored_url']
