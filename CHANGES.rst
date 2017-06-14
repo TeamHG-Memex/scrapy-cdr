@@ -3,6 +3,13 @@ Changes
 
 .. contents::
 
+0.3.2 (2017-06-14)
+------------------
+
+- Fix file extension handling in ``CDRMediaPipeline``: now only url path
+  is used (without query and fragment).
+
+
 0.3.1 (2017-06-08)
 ------------------
 
