@@ -55,11 +55,15 @@ Media items
 ``scrapy_cdr.media_pipeline.CDRMediaPipeline`` helps to download items
 and puts them into "objects" field of the CDR item according to CDR v3 schema.
 
-1. Add the pipeline to ITEM_PIPELINES in settings::
+1. Add the pipeline to ``ITEM_PIPELINES`` in ``settings.py``::
 
     ITEM_PIPELINES = {
         'scrapy_cdr.media_pipeline.CDRMediaPipeline': 1,
     }
+
+   Also you probably want to allow redirects in the media pipeline::
+
+    MEDIA_ALLOW_REDIRECTS = True
 
 2. Set ``FILES_STORE`` as you would do for scrapy FilesPipeline.
 3. Put urls to download into "objects" field of the cdr item in the crawler,
