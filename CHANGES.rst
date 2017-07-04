@@ -3,6 +3,13 @@ Changes
 
 .. contents::
 
+0.3.3 (2017-07-04)
+------------------
+
+- ``cdr-es-upload`` fixes: add ``--max-chunk-bytes`` and set it to 10 MB
+  by default (was 100 MB before), proceed after indexing errors.
+
+
 0.3.2 (2017-06-14)
 ------------------
 
