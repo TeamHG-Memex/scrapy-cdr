@@ -16,7 +16,7 @@ from .utils import format_timestamp
 def main():
     parser = argparse.ArgumentParser(description='Upload items to ES index')
     arg = parser.add_argument
-    arg('input', help='input in .jl or .jl.gz format')
+    arg('inputs', nargs='+', help='inputs in .jl or .jl.gz format')
     arg('index', help='ES index name')
     arg('--type', default='document',
         help='ES type to use ("document" by default)')
@@ -45,42 +45,50 @@ def main():
         **kwargs)
     print(client.info())
 
+    def _items():
+        for filename in args.inputs:
+            with json_lines.open(filename, broken=args.broken) as f:
+                for item in f:
+                    yield item
+
     is_cdrv3 = args.format == 'CDRv3'
 
     def _actions():
-        with json_lines.open(args.input, broken=args.broken) as f:
-            items = islice(f, args.limit) if args.limit else f
-            for item in items:
+        items = _items()
+        if args.limit:
+            items = islice(items, args.limit)
+        for item in items:
 
-                if is_cdrv3:
-                    assert 'timestamp_crawl' in item, 'this is not CDRv3, check --format'
-                else:
-                    assert 'timestamp' in item, 'this is not CDRv2, check --format'
+            if is_cdrv3:
+                assert 'timestamp_crawl' in item, 'this is not CDRv3, check --format'
+            else:
+                assert 'timestamp' in item, 'this is not CDRv2, check --format'
 
-                if is_cdrv3:
-                    item['timestamp_index'] = format_timestamp(datetime.utcnow())
-                elif isinstance(item['timestamp'], int):
-                    item['timestamp'] = format_timestamp(
-                        datetime.fromtimestamp(item['timestamp'] / 1000.))
+            if is_cdrv3:
+                item['timestamp_index'] = format_timestamp(datetime.utcnow())
+            elif isinstance(item['timestamp'], int):
+                item['timestamp'] = format_timestamp(
+                    datetime.fromtimestamp(item['timestamp'] / 1000.))
 
-                action = {
-                    '_op_type': args.op_type,
-                    '_index': args.index,
-                    '_type': args.type,
-                    '_id': item.pop('_id'),
-                }
-                if is_cdrv3:
-                    item.pop('metadata', None)  # not in CDRv3 schema
-                else:
-                    item.pop('extracted_metadata', None)
-                if args.op_type != 'delete':
-                    action['_source'] = item
-                yield action
+            action = {
+                '_op_type': args.op_type,
+                '_index': args.index,
+                '_type': args.type,
+                '_id': item.pop('_id'),
+            }
+            if is_cdrv3:
+                item.pop('metadata', None)  # not in CDRv3 schema
+            else:
+                item.pop('extracted_metadata', None)
+            if args.op_type != 'delete':
+                action['_source'] = item
+            yield action
 
     # This wrapper is needed due to use of raise_on_error=False
     # below (which we need because es can raise exceptions on timeouts, etc.),
     # but we don't want to ignore errors when reading data.
     failed = [False]  # to set correct exit code
+
     def actions():
         try:
             for x in _actions():
