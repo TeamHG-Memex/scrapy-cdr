@@ -32,6 +32,8 @@ def main():
     arg('--threads', type=int, default=8, help='number of threads')
     arg('--limit', type=int, help='Index first N items')
     arg('--format', choices=['CDRv2', 'CDRv3'], default='CDRv3')
+    arg('--max-chunk-bytes', type=int, default=10 * 2**20,
+        help='Depends on how ES is configured. 10 MB on AWS (default).')
 
     args = parser.parse_args()
     kwargs = {}
@@ -109,6 +111,7 @@ def main():
                     chunk_size=args.chunk_size,
                     thread_count=args.threads,
                     raise_on_error=False,
+                    max_chunk_bytes=args.max_chunk_bytes,
                 ), start=1):
             op_result = result[args.op_type].get('result')
             if op_result is None:
