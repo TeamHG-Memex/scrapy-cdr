@@ -3,6 +3,13 @@ Changes
 
 .. contents::
 
+0.3.4 (2017-07-04)
+------------------
+
+- ``cdr-es-upload`` fixes: run in constant memory, proceed after ES upload
+  errors (e.g. exceeding upload size).
+
+
 0.3.3 (2017-07-04)
 ------------------
 
