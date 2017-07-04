@@ -1,5 +1,6 @@
 import argparse
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from itertools import islice
 import sys
@@ -8,7 +9,7 @@ import traceback
 
 import json_lines
 import elasticsearch
-import elasticsearch.helpers
+import elasticsearch.helpers as es_helpers
 
 from .utils import format_timestamp
 
@@ -29,7 +30,7 @@ def main():
     arg('--user', help='HTTP Basic Auth user')
     arg('--password', help='HTTP Basic Auth password')
     arg('--chunk-size', type=int, default=50, help='upload chunk size')
-    arg('--threads', type=int, default=8, help='number of threads')
+    arg('--threads', type=int, default=4, help='number of threads')
     arg('--limit', type=int, help='Index first N items')
     arg('--format', choices=['CDRv2', 'CDRv3'], default='CDRv3')
     arg('--max-chunk-bytes', type=int, default=10 * 2**20,
@@ -63,7 +64,8 @@ def main():
         for item in items:
 
             if is_cdrv3:
-                assert 'timestamp_crawl' in item, 'this is not CDRv3, check --format'
+                assert 'timestamp_crawl' in item, \
+                       'this is not CDRv3, check --format'
             else:
                 assert 'timestamp' in item, 'this is not CDRv2, check --format'
 
@@ -106,11 +108,11 @@ def main():
     result_counts = defaultdict(int)
     try:
         for i, (success, result) in enumerate(
-                elasticsearch.helpers.parallel_bulk(
+                parallel_bulk(
                     client,
                     actions=actions(),
-                    chunk_size=args.chunk_size,
                     thread_count=args.threads,
+                    chunk_size=args.chunk_size,
                     raise_on_error=False,
                     raise_on_exception=False,
                     max_chunk_bytes=args.max_chunk_bytes,
@@ -118,7 +120,8 @@ def main():
             op_result = result[args.op_type].get('result')
             if op_result is None:
                 # ES 2.x
-                op_result = 'status_{}'.format(result[args.op_type].get('status'))
+                op_result = ('status_{}'
+                             .format(result[args.op_type].get('status')))
             result_counts[op_result] += 1
             if not (success or (args.op_type == 'delete' and
                                 op_result in {'not_found', 'status_404'})):
@@ -138,11 +141,43 @@ def main():
 
 
 def _report_stats(items, prev_items, dt, result_counts):
-    print('{items:,} items processed ({stats}) at {speed:.0f} items/s'
-          .format(
-            items=items,
-            stats=', '.join(
-                '{}: {:,}'.format(k, v)
-                for k, v in sorted(result_counts.items()) if v != 0),
-            speed=(items - prev_items) / dt,
+    print('{items:,} items processed ({stats}) at {speed:.0f} items/s'.format(
+        items=items,
+        stats=', '.join(
+            '{}: {:,}'.format(k, v)
+            for k, v in sorted(result_counts.items()) if v != 0),
+        speed=(items - prev_items) / dt,
     ))
+
+
+def parallel_bulk(client, actions, thread_count=4, chunk_size=500,
+                  max_chunk_bytes=100 * 1024 * 1024,
+                  expand_action_callback=es_helpers.expand_action,
+                  **kwargs):
+    """ es_helpers.parallel_bulk rewritten with imap_fixed_output_buffer
+    instead of Pool.imap, which consumed unbounded memory if the generator
+    outruns the upload (which usually happens).
+    """
+    actions = map(expand_action_callback, actions)
+    for result in imap_fixed_output_buffer(
+            lambda chunk: list(
+                es_helpers._process_bulk_chunk(client, chunk, **kwargs)),
+            es_helpers._chunk_actions(actions, chunk_size, max_chunk_bytes,
+                                      client.transport.serializer),
+            threads=thread_count,
+        ):
+        for item in result:
+            yield item
+
+
+def imap_fixed_output_buffer(fn, it, threads: int):
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        futures = []
+        max_futures = threads + 1
+        for i, x in enumerate(it):
+            while len(futures) >= max_futures:
+                future, futures = futures[0], futures[1:]
+                yield future.result()
+            futures.append(executor.submit(fn, x))
+        for future in futures:
+            yield future.result()

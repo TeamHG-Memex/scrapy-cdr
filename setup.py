@@ -9,6 +9,7 @@ setup(
         'botocore',
         'elasticsearch',
         'elasticsearch-dsl',
+        'futures;python_version<"3.2"',
         'json_lines',
         'requests',
         'scrapy',
