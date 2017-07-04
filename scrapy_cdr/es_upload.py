@@ -51,6 +51,7 @@ def main():
 
     def _items():
         for filename in args.inputs:
+            print('Starting {}'.format(filename))
             with json_lines.open(filename, broken=args.broken) as f:
                 for item in f:
                     yield item
