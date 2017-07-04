@@ -118,8 +118,9 @@ def main():
             if args.op_type == 'delete':
                 if not success:
                     assert op_result in {'not_found', 'status_404'}, result
-            else:
-                assert success, (success, op_result, result)
+            elif not success:
+                print('Error: {}'.format(result), file=sys.stderr)
+                failed[0] = True
             t1 = time.time()
             if t1 - t0 > 10:
                 _report_stats(i, last_i, t1 - t0, result_counts)
