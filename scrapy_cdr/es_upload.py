@@ -34,6 +34,7 @@ def main():
     arg('--format', choices=['CDRv2', 'CDRv3'], default='CDRv3')
     arg('--max-chunk-bytes', type=int, default=10 * 2**20,
         help='Depends on how ES is configured. 10 MB on AWS (default).')
+    arg('--silence-es-errors', action='store_true')
 
     args = parser.parse_args()
     kwargs = {}
@@ -87,7 +88,7 @@ def main():
             yield action
 
     # This wrapper is needed due to use of raise_on_error=False
-    # below (which we need because es can raise exceptions on timeouts, etc.),
+    # below (which we need because ES can raise exceptions on timeouts, etc.),
     # but we don't want to ignore errors when reading data.
     failed = [False]  # to set correct exit code
 
@@ -111,6 +112,7 @@ def main():
                     chunk_size=args.chunk_size,
                     thread_count=args.threads,
                     raise_on_error=False,
+                    raise_on_exception=False,
                     max_chunk_bytes=args.max_chunk_bytes,
                 ), start=1):
             op_result = result[args.op_type].get('result')
@@ -118,11 +120,10 @@ def main():
                 # ES 2.x
                 op_result = 'status_{}'.format(result[args.op_type].get('status'))
             result_counts[op_result] += 1
-            if args.op_type == 'delete':
-                if not success:
-                    assert op_result in {'not_found', 'status_404'}, result
-            elif not success:
-                print('Error: {}'.format(result), file=sys.stderr)
+            if not (success or (args.op_type == 'delete' and
+                                op_result in {'not_found', 'status_404'})):
+                if not args.silence_es_errors:
+                    print('ES error: {}'.format(result), file=sys.stderr)
                 failed[0] = True
             t1 = time.time()
             if t1 - t0 > 10:
