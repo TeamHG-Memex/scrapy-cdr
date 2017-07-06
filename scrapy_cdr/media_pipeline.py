@@ -81,10 +81,7 @@ class CDRMediaPipeline(FilesPipeline):
 
     def file_path(self, request, response=None, info=None):
         assert response is not None
-        name = hashlib.sha256(response.body).hexdigest().upper()
-        parsed = urlsplit(request.url)
-        media_ext = os.path.splitext(parsed.path)[1]
-        return '{}{}'.format(name, media_ext)
+        return hashlib.sha256(response.body).hexdigest().upper()
 
     def media_downloaded(self, response, request, info):
         result = super(CDRMediaPipeline, self)\

@@ -17,7 +17,7 @@ class Spider(scrapy.Spider):
     def __init__(self, url):
         super(Spider, self).__init__()
         self.start_urls = [url]
-        self.le = LinkExtractor()
+        self.le = LinkExtractor(canonicalize=False)
         self.files_le = LinkExtractor(
             tags=['a'], attrs=['href'], deny_extensions=[], canonicalize=False)
 
@@ -83,6 +83,7 @@ def test_media_pipeline(tmpdir):
     assert len(root_item['objects']) == 2
     file_item = find_item('/file.pdf', root_item['objects'], 'obj_original_url')
     assert file_item['obj_original_url'] == root_url + '/file.pdf'
+    assert not file_item['obj_stored_url'].endswith('.pdf')
     with tmpdir.join(file_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS
     assert file_item['content_type'] == 'application/pdf'
