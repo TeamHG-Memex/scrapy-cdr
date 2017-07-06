@@ -3,6 +3,15 @@ Changes
 
 .. contents::
 
+0.4.0 (2017-07-06)
+------------------
+
+- ``CDRMediaPipeline`` does not keep extensions in file names
+- ``CDRMediaPipeline`` limits downloader cache by default to 10k items
+- an option to put files in a reverse domain folder structure
+  for ``cdr-es-upload`` (this also strips extensions)
+
+
 0.3.4 (2017-07-04)
 ------------------
 
