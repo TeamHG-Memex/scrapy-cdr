@@ -26,7 +26,7 @@ def main():
         help='ES type to use ("document" by default)')
     arg('--op-type', default='index',
         choices={'index', 'create', 'delete', 'update'},
-        help='ES operation type to use ("document" by default)')
+        help='ES operation type to use ("index" by default)')
     arg('--broken', action='store_true',
         help='specify if input might be broken (incomplete)')
     arg('--host', default='localhost', help='ES host in host[:port] format')
