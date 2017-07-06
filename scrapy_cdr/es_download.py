@@ -13,6 +13,7 @@ def main():
     arg('output', help='output in .jl.gz format')
     arg('index', help='ES index name')
     arg('--domain', help='url.domain to filter')
+    arg('--id', help='record id')
     arg('--host', default='localhost', help='ES host in host[:port] format')
     arg('--user', help='HTTP Basic Auth user')
     arg('--password', help='HTTP Basic Auth password')
@@ -33,6 +34,8 @@ def main():
     search = Search(using=client, index=args.index)
     if args.domain:
         search = search.filter('term', **{'url.domain': args.domain})
+    if args.id:
+        search = search.filter('term', **{'_id': args.id})
 
     total = 0
     with tqdm.tqdm(total=search.count()) as pbar:
