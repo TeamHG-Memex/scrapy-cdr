@@ -7,6 +7,7 @@ setup(
     packages=['scrapy_cdr'],
     install_requires=[
         'botocore',
+        'cachetools',
         'elasticsearch',
         'elasticsearch-dsl',
         'futures',

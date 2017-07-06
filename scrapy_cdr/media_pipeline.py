@@ -2,8 +2,8 @@ from datetime import datetime
 import hashlib
 import logging
 import os.path
-from six.moves.urllib.parse import urlsplit
 
+import cachetools
 from scrapy import Request
 from scrapy.pipelines.files import FilesPipeline, S3FilesStore
 from .utils import format_timestamp, media_cdr_item
@@ -45,6 +45,12 @@ class CDRMediaPipeline(FilesPipeline):
          (if ``FILES_STORE_S3_ACL`` is ``public-read`` or ``public-read-write``),
          and "s3://" for private items (default in scrapy).
     """
+
+    def open_spider(self, spider):
+        super(CDRMediaPipeline, self).open_spider(spider)
+        max_cached = spider.settings.getint('FILES_MAX_CACHE', 10000)
+        if max_cached:  # 0 not supported here
+            self.spiderinfo.downloaded = cachetools.LRUCache(maxsize=max_cached)
 
     def media_request(self, url):
         # Override to provide your own downloading logic
