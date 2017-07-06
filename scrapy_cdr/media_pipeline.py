@@ -1,7 +1,6 @@
 from datetime import datetime
 import hashlib
 import logging
-import os.path
 
 import cachetools
 from scrapy import Request
