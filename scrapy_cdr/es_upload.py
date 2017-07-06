@@ -161,7 +161,7 @@ def _reverse_domain_storage(item, media_root):
         domain = urlsplit(obj['obj_original_url']).netloc
         if ':' in domain:
             domain, _ = domain.split(':', 1)
-        parents = list(reversed(domain.split('.')))
+        parents = [p for p in reversed(domain.split('.')) if p]
         os.makedirs(os.path.join(media_root, *parents), exist_ok=True)
         stored_url_noext, _ = os.path.splitext(stored_url)
         new_stored_url = os.path.sep.join(parents + [stored_url_noext])
