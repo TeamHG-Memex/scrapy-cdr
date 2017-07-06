@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import pytest
 import scrapy
 from scrapy.crawler import CrawlerRunner
 from scrapy.linkextractors import LinkExtractor
@@ -63,22 +64,28 @@ class WithFile(Resource):
         self.putChild(b'', text_resource(
             '<a href="/file.pdf">file</a> '
             '<a href="/page?b=2&a=1">page</a> '
+            '<a href="/another-page">another page</a> '
             '<a href="/forbidden.pdf">forbidden file</a>'
         )())
         self.putChild(b'file.pdf', PDFFile())
         self.putChild(b'forbidden.pdf', text_resource(FILE_CONTENTS * 2)())
         self.putChild(b'page', text_resource(
             '<a href="/file.pdf?allow=true">file</a>')())
+        self.putChild(b'another-page', text_resource(
+            '<a href="/file.pdf">file</a>')())
 
 
 @inlineCallbacks
-def test_media_pipeline(tmpdir):
-    crawler = make_crawler(FILES_STORE='file://{}'.format(tmpdir))
+@pytest.mark.parametrize(['max_cache'], [[1], [10000], [None]])
+def test_media_pipeline(tmpdir, max_cache):
+    crawler = make_crawler(FILES_STORE='file://{}'.format(tmpdir),
+                           FILES_MAX_CACHE=max_cache)
     with MockServer(WithFile) as s:
         root_url = s.root_url
         yield crawler.crawl(url=root_url)
     spider = crawler.spider
-    assert len(spider.collected_items) == 2
+    assert len(spider.collected_items) == 3
+
     root_item = find_item('/', spider.collected_items)
     assert len(root_item['objects']) == 2
     file_item = find_item('/file.pdf', root_item['objects'], 'obj_original_url')
@@ -92,11 +99,19 @@ def test_media_pipeline(tmpdir):
     headers.pop('server')
     assert headers == {'content-type': 'application/pdf',
                        'content-hype': 'very/high'}
+
     forbidden_item = find_item(
         '/forbidden.pdf', root_item['objects'], 'obj_original_url')
     with tmpdir.join(forbidden_item['obj_stored_url']).open('rb') as f:
         assert f.read() == FILE_CONTENTS * 2
+
     page_item = find_item('/page?b=2&a=1', spider.collected_items)
     file_item_q = find_item(
         '/file.pdf?allow=true', page_item['objects'], 'obj_original_url')
     assert file_item_q['obj_stored_url'] == file_item['obj_stored_url']
+
+    another_page_item = find_item('/another-page', spider.collected_items)
+    file_item_q = find_item(
+        '/file.pdf', another_page_item['objects'], 'obj_original_url')
+    assert file_item_q['obj_stored_url'] == file_item['obj_stored_url']
+    assert file_item_q['obj_original_url'] == file_item['obj_original_url']

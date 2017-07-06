@@ -76,7 +76,12 @@ and puts them into "objects" field of the CDR item according to CDR v3 schema.
         objects=['http://example.com/1.png', 'http://example.com/1.png'],
     )
 
-4. Optionally, subclass the ``CDRMediaPipeline`` and re-define some methods:
+4. Optionally, cutomize ``CDRMediaPipeline``:
+
+   - ``FILES_MAX_CACHE`` set maximum size of the downloader cache, and is
+     10000 by default (unlike unbounded cache used in scrapy).
+
+5. Optionally, subclass the ``CDRMediaPipeline`` and re-define some methods:
 
    - ``media_request`` method if you want to
      customize how media items are downloaded.
