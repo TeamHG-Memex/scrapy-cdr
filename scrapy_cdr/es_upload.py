@@ -3,7 +3,10 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from itertools import islice
+import os
+import shutil
 import sys
+from six.moves.urllib.parse import urlsplit
 import time
 import traceback
 
@@ -36,8 +39,15 @@ def main():
     arg('--max-chunk-bytes', type=int, default=10 * 2**20,
         help='Depends on how ES is configured. 10 MB on AWS (default).')
     arg('--silence-es-errors', action='store_true')
+    arg('--reverse-domain-storage', action='store_true',
+        help='Store objects in reverse domain folder structure. Objects '
+             'will be copied in the filesystem. --media-root must be set.')
+    arg('--media-root', help='path to the root of stored media objects')
 
     args = parser.parse_args()
+    if args.reverse_domain_storage and not args.media_root:
+        parser.error('--media-root must be set with --reverse-domain-objects')
+
     kwargs = {}
     if args.user or args.password:
         kwargs['http_auth'] = (args.user, args.password)
@@ -75,6 +85,9 @@ def main():
             elif isinstance(item['timestamp'], int):
                 item['timestamp'] = format_timestamp(
                     datetime.fromtimestamp(item['timestamp'] / 1000.))
+
+            if args.reverse_domain_storage:
+                _reverse_domain_storage(item, args.media_root)
 
             action = {
                 '_op_type': args.op_type,
@@ -139,6 +152,23 @@ def main():
 
     if failed[0]:
         sys.exit(1)
+
+
+def _reverse_domain_storage(item, media_root):
+    for obj in item.get('objects', []):
+        stored_url = obj['obj_stored_url']
+        assert '/' not in stored_url
+        domain = urlsplit(obj['obj_original_url']).netloc
+        if ':' in domain:
+            domain, _ = domain.split(':', 1)
+        parents = list(reversed(domain.split('.')))
+        os.makedirs(os.path.join(media_root, *parents), exist_ok=True)
+        stored_url_noext, _ = os.path.splitext(stored_url)
+        new_stored_url = os.path.sep.join(parents + [stored_url_noext])
+        dest = os.path.join(media_root, new_stored_url)
+        if not os.path.exists(dest):
+            shutil.copy(os.path.join(media_root, stored_url), dest)
+        obj['obj_stored_url'] = new_stored_url
 
 
 def _report_stats(items, prev_items, dt, result_counts):
