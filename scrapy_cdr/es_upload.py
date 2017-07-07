@@ -3,6 +3,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from itertools import islice
+import logging
 import os
 import shutil
 import sys
@@ -38,7 +39,8 @@ def main():
     arg('--format', choices=['CDRv2', 'CDRv3'], default='CDRv3')
     arg('--max-chunk-bytes', type=int, default=10 * 2**20,
         help='Depends on how ES is configured. 10 MB on AWS (default).')
-    arg('--silence-es-errors', action='store_true')
+    arg('--log-level', default='INFO')
+    arg('--log-file')
     arg('--reverse-domain-storage', action='store_true',
         help='Store objects in reverse domain folder structure. Objects '
              'will be copied in the filesystem. --media-root must be set.')
@@ -47,6 +49,12 @@ def main():
     args = parser.parse_args()
     if args.reverse_domain_storage and not args.media_root:
         parser.error('--media-root must be set with --reverse-domain-objects')
+
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format='%(asctime)s [%(levelname)s] %(module)s: %(message)s',
+        filename=args.log_file)
+    logging.getLogger('elasticsearch').setLevel(logging.WARNING)
 
     kwargs = {}
     if args.user or args.password:
@@ -57,11 +65,11 @@ def main():
         connection_class=elasticsearch.RequestsHttpConnection,
         timeout=600,
         **kwargs)
-    print(client.info())
+    logging.info(client.info())
 
     def _items():
         for filename in args.inputs:
-            print('Starting {}'.format(filename))
+            logging.info('Starting {}'.format(filename))
             with json_lines.open(filename, broken=args.broken) as f:
                 for item in f:
                     yield item
@@ -139,8 +147,7 @@ def main():
             result_counts[op_result] += 1
             if not (success or (args.op_type == 'delete' and
                                 op_result in {'not_found', 'status_404'})):
-                if not args.silence_es_errors:
-                    print('ES error: {}'.format(result), file=sys.stderr)
+                logging.info('ES error: {}'.format(str(result)[:2000]))
                 failed[0] = True
             t1 = time.time()
             if t1 - t0 > 10:
@@ -172,13 +179,15 @@ def _reverse_domain_storage(item, media_root):
 
 
 def _report_stats(items, prev_items, dt, result_counts):
-    print('{items:,} items processed ({stats}) at {speed:.0f} items/s'.format(
-        items=items,
-        stats=', '.join(
-            '{}: {:,}'.format(k, v)
-            for k, v in sorted(result_counts.items()) if v != 0),
-        speed=(items - prev_items) / dt,
-    ))
+    logging.info(
+        '{items:,} items processed ({stats}) at {speed:.0f} items/s'
+        .format(items=items,
+                stats=', '.join(
+                    '{}: {:,}'.format(k, v)
+                    for k, v in sorted(result_counts.items()) if v != 0),
+                speed=(items - prev_items) / dt,
+                )
+    )
 
 
 def parallel_bulk(client, actions, thread_count=4, chunk_size=500,
