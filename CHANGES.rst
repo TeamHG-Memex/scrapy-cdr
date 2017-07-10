@@ -3,6 +3,14 @@ Changes
 
 .. contents::
 
+0.4.1 (2017-07-10)
+------------------
+
+- ``cdr-es-upload``: fix in ``--reverse-domains`` option, use logging,
+  allow setting log file and log level
+- ``cdr-es-download``: add filtering by ``--id``
+
+
 0.4.0 (2017-07-06)
 ------------------
 
