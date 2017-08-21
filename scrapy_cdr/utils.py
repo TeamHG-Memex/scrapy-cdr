@@ -53,5 +53,5 @@ def format_timestamp(dt):
 
 
 def format_id(url, timestamp_crawl):
-    return (hashlib.sha256('{}-{}'.format(url, timestamp_crawl).encode('utf-8'))
-            .hexdigest().upper())
+    key = '{}-{}'.format(url, timestamp_crawl).encode('utf-8')
+    return hashlib.sha256(key).hexdigest().upper()

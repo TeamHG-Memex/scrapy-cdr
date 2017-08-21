@@ -88,7 +88,8 @@ def test_media_pipeline(tmpdir, max_cache):
 
     root_item = find_item('/', spider.collected_items)
     assert len(root_item['objects']) == 2
-    file_item = find_item('/file.pdf', root_item['objects'], 'obj_original_url')
+    file_item = find_item(
+        '/file.pdf', root_item['objects'], 'obj_original_url')
     assert file_item['obj_original_url'] == root_url + '/file.pdf'
     assert not file_item['obj_stored_url'].endswith('.pdf')
     with tmpdir.join(file_item['obj_stored_url']).open('rb') as f:

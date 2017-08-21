@@ -28,8 +28,8 @@ class CDRItem(scrapy.Item):
     # Text label identifying the team responsible for the crawler (string)
     team = scrapy.Field()
 
-    # Timestamp of COLLECTION of data from the web using ISO-8601 format in UTC,
-    # e.g. 2017-02-15T20:30:59Z
+    # Timestamp of COLLECTION of data from the web using ISO-8601 format in
+    # UTC, e.g. 2017-02-15T20:30:59Z
     timestamp_crawl = scrapy.Field()
 
     # timestamp_index is generated at indexing time
@@ -67,6 +67,6 @@ class CDRMediaItem(scrapy.Item):
     # Response headers as a dictionary
     response_headers = scrapy.Field()
 
-    # Timestamp of COLLECTION of data from the web using ISO-8601 format in UTC,
-    # eg 2017-02-15T20:30:59Z
+    # Timestamp of COLLECTION of data from the web using ISO-8601 format in
+    # UTC, eg 2017-02-15T20:30:59Z
     timestamp_crawl = scrapy.Field()
