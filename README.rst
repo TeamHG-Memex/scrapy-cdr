@@ -76,10 +76,16 @@ and puts them into "objects" field of the CDR item according to CDR v3 schema.
         objects=['http://example.com/1.png', 'http://example.com/1.png'],
     )
 
-4. Optionally, cutomize ``CDRMediaPipeline``:
+4. Optionally, customize ``CDRMediaPipeline``:
 
    - ``FILES_MAX_CACHE`` set maximum size of the downloader cache, and is
      10000 by default (unlike unbounded cache used in scrapy).
+
+   - Set ``CDR_S3_RELATIVE_URLS = False`` option to use
+     absolute URLs in ``objects`` array (``obj_stored_url``) when data is
+     stored to S3. By default, S3 URLs are relative, i.e. they don't
+     contain path and bucket. Local paths are always relative, regardless
+     of this option.
 
 5. Optionally, subclass the ``CDRMediaPipeline`` and re-define some methods:
 
@@ -87,7 +93,8 @@ and puts them into "objects" field of the CDR item according to CDR v3 schema.
      customize how media items are downloaded.
    - ``s3_path`` method if you are storing media items in S3
      (``FILES_STORE`` is "s3://...") and want to customize the S3 URL of
-     stored items. By default it is "https://" urls for public items
+     stored items. When URLs are absolute (``CDR_S3_RELATIVE_URLS = False``),
+     by default it is "https://" urls for public items
      (if ``FILES_STORE_S3_ACL`` is ``public-read`` or ``public-read-write``),
      and "s3://" for private items (default in scrapy).
 

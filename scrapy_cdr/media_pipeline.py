@@ -34,16 +34,27 @@ class CDRMediaPipeline(FilesPipeline):
             objects=['http://example.com/1.png', 'http://example.com/1.png'],
         )
 
-    4. Optionally, subclass the ``CDRMediaPipeline`` and redefine some methods:
+    4. Optionally, customize ``CDRMediaPipeline``:
+
+       - ``FILES_MAX_CACHE`` set maximum size of the downloader cache, and is
+         10000 by default (unlike unbounded cache used in scrapy).
+
+       - Set ``CDR_S3_RELATIVE_URLS=False`` option to use
+         absolute URLs in ``objects`` array (``obj_stored_url``) when data is
+         stored to S3. By default, S3 URLs are relative, i.e. they don't
+         contain path and bucket. Local paths are always relative, regardless
+         of this option.
+
+    5. Optionally, subclass the ``CDRMediaPipeline`` and redefine some methods:
 
        - ``media_request`` method if you want to
          customize how media items are downloaded.
        - ``s3_path`` method if you are storing media items in S3
          (``FILES_STORE`` is "s3://...") and want to customize the S3 URL of
-         stored items. By default it is "https://" urls for public items
-         (if ``FILES_STORE_S3_ACL`` is ``public-read`` or
-         ``public-read-write``), and "s3://" for private items
-         (default in scrapy).
+         stored items. When URLs are absolute (``CDR_S3_RELATIVE_URLS = False``),
+         by default it is "https://" urls for public items
+         (if ``FILES_STORE_S3_ACL`` is ``public-read`` or ``public-read-write``),
+         and "s3://" for private items (default in scrapy).
     """
 
     def open_spider(self, spider):
@@ -52,6 +63,8 @@ class CDRMediaPipeline(FilesPipeline):
         if max_cached:  # 0 not supported here
             self.spiderinfo.downloaded = cachetools.LRUCache(
                 maxsize=max_cached)
+        self.s3_relative_urls = spider.settings.getbool(
+            'CDR_S3_RELATIVE_URLS', True)
 
     def media_request(self, url):
         # Override to provide your own downloading logic
@@ -79,12 +92,14 @@ class CDRMediaPipeline(FilesPipeline):
         return item
 
     def s3_path(self, path):
+        rel_path = "{}{}".format(self.store.prefix, path)
+        if self.s3_relative_urls:
+            return rel_path
         if self.store.POLICY in {'public-read', 'public-read-write'}:
-            return 'https://{}.s3.amazonaws.com/{}{}'.format(
-                self.store.bucket, self.store.prefix, path)
+            return 'https://{}.s3.amazonaws.com/{}'.format(
+                self.store.bucket, rel_path)
         else:
-            return 's3://{}/{}{}'.format(
-                self.store.bucket, self.store.prefix, path)
+            return 's3://{}/{}'.format(self.store.bucket, rel_path)
 
     def file_path(self, request, response=None, info=None):
         assert response is not None
