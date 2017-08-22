@@ -27,7 +27,7 @@ def test_text_cdr_item():
                              'another-header': 'text/complain, text/explain'},
         'team': 'team',
         'url': 'http://example.com',
-        'version': 3.0}
+        'version': 3.1}
 
 
 def check_timestamp_crawl(item):

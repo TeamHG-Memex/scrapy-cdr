@@ -30,7 +30,7 @@ def cdr_item(url, crawler_name, team_name, item_cls=CDRItem, **extra):
         team=team_name,
         timestamp_crawl=timestamp_crawl,
         url=url,
-        version=3.0,
+        version=3.1,
         **extra)
 
 

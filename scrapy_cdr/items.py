@@ -37,7 +37,7 @@ class CDRItem(scrapy.Item):
     # Full URL requested by the crawler (multi (strings))
     url = scrapy.Field()
 
-    # Schema version. This document describes schema version 2.0. (float)
+    # Schema version. This document describes schema version 3.1. (float)
     version = scrapy.Field()
 
     # This field is not in CDR v3 schema, and will be stripped in cdr-es-upload
