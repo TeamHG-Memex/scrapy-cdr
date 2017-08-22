@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='scrapy-cdr',
-    version='0.4.1',
+    version='0.5',
     packages=['scrapy_cdr'],
     install_requires=[
         'botocore',

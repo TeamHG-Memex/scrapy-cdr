@@ -3,6 +3,17 @@ Changes
 
 .. contents::
 
+0.5 (2017-08-23)
+----------------
+
+Better CDR 3.1 compatibility:
+
+- by default CDRMediaPipeline outputs relative URLs for stored files
+  instead of absolute URLs;
+- new ``CDR_S3_RELATIVE_URLS`` option which allows to switch back to
+  absolute URLs (set it to False);
+- version number of CDR items is set to 3.1 instead of 3.0.
+
 0.4.1 (2017-07-10)
 ------------------
 
