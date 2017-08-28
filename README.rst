@@ -26,6 +26,11 @@ Install
 
     pip install scrapy-cdr
 
+If you need ElasticSearch support, run this instead::
+
+    pip install scrapy-cdr[es]
+
+scrapy-cdr requires setuptools 18.0+.
 
 Usage
 -----
