@@ -3,6 +3,14 @@ Changes
 
 .. contents::
 
+0.5.1 (2017-08-29)
+------------------
+
+Packaging fixes:
+
+- elasticsearch dependencies are optional now;
+- ``futures`` package is no longer installed in Python 3.
+
 0.5 (2017-08-23)
 ----------------
 
