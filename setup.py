@@ -19,6 +19,9 @@ setup(
             'elasticsearch',
             'elasticsearch-dsl',
         ],
+        'kafka': [
+            'kafka-python',
+        ],
         ':python_version<"3.0"': ['futures'],
     },
     entry_points={
@@ -26,6 +29,7 @@ setup(
             'cdr-v2-to-v3=scrapy_cdr.v2_to_v3:main',
             'cdr-es-upload=scrapy_cdr.es_upload:main',
             'cdr-es-download=scrapy_cdr.es_download:main',
+            'cdr-kafka-upload=scrapy_cdr.kafka_upload:main',
             ],
     },
     license='MIT license',
