@@ -3,6 +3,13 @@ Changes
 
 .. contents::
 
+0.6.0 (2017-10-31)
+------------------
+
+- A ``cdr-kafka-upload`` command for uploading CDR results to Kafka
+  (use ``scrapy-cdr[kafka]`` to install dependencies).
+
+
 0.5.1 (2017-08-29)
 ------------------
 
