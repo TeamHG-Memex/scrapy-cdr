@@ -126,3 +126,9 @@ License
 -------
 
 License is MIT.
+
+----
+
+.. image:: https://hyperiongray.s3.amazonaws.com/define-hg.svg
+	:target: https://hyperiongray.com/?pk_campaign=github&pk_kwd=scrapy-cdr
+	:alt: define hyperiongray
