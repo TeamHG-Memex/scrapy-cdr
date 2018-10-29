@@ -47,9 +47,9 @@ class CDRItem(scrapy.Item):
         fields = ['_id', 'url', 'timestamp_crawl']
         return '<CDRItem: {attrs}{objects}>'.format(
             attrs=', '.join(
-                '{}: {}'.format(f, repr(self[f])) for f in fields),
-            objects=('' if not self['objects'] else
-                     ', {} objects'.format(len(self['objects']))),
+                '{}: {}'.format(f, repr(self.get(f, ''))) for f in fields),
+            objects=('' if not self.get('objects', None) else
+                     ', {} objects'.format(self['objects'])),
         )
 
 
